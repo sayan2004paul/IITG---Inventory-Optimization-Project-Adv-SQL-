@@ -1,3 +1,33 @@
 # Stock Level Monitoring Queries (solutions)
+1."What is the total inventory count per product category, and how is it distributed across warehouse regions?"
+
+# total  inventory count per product category 
+
+
+SELECT 
+ f.cat_id, c.Category,SUM(f.Inventory_Level ) AS total_inventory 
+ FROM final_fact f 
+  JOIN 
+   dim_cat c 
+    USING(cat_id)
+     GROUP BY 
+        f.cat_id, c.Category
+         ORDER BY 
+           SUM(f.Inventory_Level )  DESC;
+
+
+
+#  total inventory count per category across regions        
+ 
+ SELECT 
+ f.cat_id, c.Category,r.Region,SUM(f.Inventory_Level ) AS total_inventory 
+ FROM final_fact f 
+  JOIN 
+   dim_cat c ON f.cat_id=c.cat_id
+    JOIN dim_regions r ON f.reg_id=r.Reg_id
+     GROUP BY 
+        f.cat_id, c.Category,r.Region
+         ORDER BY 
+          Region ,Category , SUM(f.Inventory_Level ) DESC
 
 
