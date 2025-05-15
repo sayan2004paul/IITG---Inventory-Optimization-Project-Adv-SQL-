@@ -1,5 +1,8 @@
 # Stock Level Monitoring Queries (solutions)
+
 1."What is the total inventory count per product category, and how is it distributed across warehouse regions?"
+•	Purpose: Identify which categories dominate inventory and regional distribution 
+
 
 # total  inventory count per product category 
 
@@ -31,3 +34,79 @@ SELECT
           Region ,Category , SUM(f.Inventory_Level ) DESC
 
 
+
+2. 2. Fast vs. Slow-Moving Products
+"Which products have the highest and lowest sales-to-inventory ratios (indicating fast/slow movers)?"
+•	Purpose: Spot potential overstocks (low ratio) and stockout risks (high ratio).
+
+
+# BASED ON PRODUCT_ID 
+
+WITH CTE AS (Select 
+ Product_ID , (SUM(Units_Sold)/SUM(Inventory_Level)) AS stocking_ratio
+FROM 
+ final_fact 
+  GROUP BY 
+   Product_ID)
+   
+   SELECT 
+    Product_ID , stocking_ratio,
+     CASE 
+      WHEN stocking_ratio>=(SELECT AVG(stocking_ratio) FROM CTE ) THEN 'fast-movers'
+       WHEN stocking_ratio<(SELECT AVG(stocking_ratio) FROM CTE ) THEN 'slow-movers'
+        END AS stock_category
+         FROM CTE 
+           ORDER BY 
+           stocking_ratio DESC
+
+
+# BASED ON PRODUCT CATEGORY 
+
+WITH CTE AS (Select 
+  c.Category , (SUM(f.Units_Sold)/SUM(f.Inventory_Level)) AS stocking_ratio
+FROM 
+ final_fact f 
+  JOIN dim_cat c USING(cat_id)
+  GROUP BY 
+   c.Category)
+   
+   SELECT 
+	 Category , stocking_ratio,
+     CASE 
+      WHEN stocking_ratio>=(SELECT AVG(stocking_ratio) FROM CTE ) THEN 'fast-movers'
+       WHEN stocking_ratio<(SELECT AVG(stocking_ratio) FROM CTE ) THEN 'slow-movers'
+        END AS stock_category
+         FROM CTE 
+          ORDER BY 
+            stocking_ratio DESC
+
+3. 3. Basic Stockout Detection
+"Which products currently have inventory levels below forecast  (immediate restock candidates)?"
+•	Purpose: Flag urgent replenishment needs.
+
+
+WITH ranked_inventory AS (
+  SELECT 
+    Product_ID,
+    Inventory_Level,Demand_Forecast,
+    Date,
+    ROW_NUMBER() OVER (PARTITION BY Product_ID ORDER BY Date DESC) AS rn
+  FROM 
+    final_fact
+),CTE1 AS (
+SELECT 
+  Product_ID,
+  Inventory_Level,
+   Demand_Forecast,
+  Date
+FROM 
+  ranked_inventory
+WHERE 
+  rn = 1)
+   SELECT 
+  Product_ID ,
+  Inventory_Level,
+   Demand_Forecast,(Inventory_Level-Demand_Forecast) AS diff 
+    FROM CTE1
+     WHERE 
+      Inventory_Level<Demand_Forecast
