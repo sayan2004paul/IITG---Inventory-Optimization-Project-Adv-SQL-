@@ -1,7 +1,7 @@
 # Stock Level Monitoring Queries (solutions)
 
 1."What is the total inventory count per product category, and how is it distributed across warehouse regions?"
-•	Purpose: Identify which categories dominate inventory and regional distribution 
+•Purpose: Identify which categories dominate inventory and regional distribution 
 
 
 # total  inventory count per product category 
@@ -35,7 +35,7 @@ SELECT
 
 
 
-2. 2. Fast vs. Slow-Moving Products
+2.Fast vs. Slow-Moving Products
 "Which products have the highest and lowest sales-to-inventory ratios (indicating fast/slow movers)?"
 •	Purpose: Spot potential overstocks (low ratio) and stockout risks (high ratio).
 
@@ -80,9 +80,9 @@ FROM
           ORDER BY 
             stocking_ratio DESC
 
-3. 3. Basic Stockout Detection
+3. Basic Stockout Detection
 "Which products currently have inventory levels below forecast  (immediate restock candidates)?"
- # Purpose: Flag urgent replenishment needs.
+ • Purpose: Flag urgent replenishment needs.
 
 
 WITH ranked_inventory AS (
@@ -140,3 +140,36 @@ WHERE
      WHERE 
       (Inventory_Level-Demand_Forecast)<128.86 
       
+4. Regional Stock Comparisons
+"How does average inventory level compare between North, South, East, and West warehouses?"
+ • Purpose: Reveal imbalances in regional stocking strategies.
+
+
+ # region wise avg_inventory 
+
+SELECT 
+    r.Region,
+     AVG(f.Inventory_Level) AS avg_inv
+  FROM 
+    final_fact f 
+     JOIN 
+      dim_regions r ON f.Reg_id=r.Reg_id
+  GROUP BY 
+      r.Region
+
+
+# region and store wise avg_inventory 
+
+
+SELECT 
+ r.Region,f.Store_ID,AVG(f.Inventory_Level)  AS avg_inv
+FROM 
+ final_fact f 
+  JOIN 
+   dim_regions r 
+    USING(Reg_ID)
+     GROUP BY 
+       r.Region,f.Store_ID
+        ORDER BY 
+         Region , avg_inv DESC
+
