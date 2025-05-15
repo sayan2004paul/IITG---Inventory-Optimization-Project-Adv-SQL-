@@ -173,3 +173,40 @@ FROM
         ORDER BY 
          Region , avg_inv DESC
 
+
+
+5. Inventory Age Tracking
+"Which products have been in inventory for the longest time without being sold?"
+• Purpose: Highlight stagnant inventory for clearance decisions.
+
+
+
+WITH last_sold_date AS (
+  SELECT 
+    Product_ID,
+    MAX(Date) AS Last_Sold_Date
+  FROM final_fact
+  WHERE Units_Sold > 0
+  GROUP BY Product_ID
+),
+latest_inventory AS (
+  SELECT 
+    Product_ID,
+    MAX(Date) AS Latest_Date
+  FROM final_fact
+  GROUP BY Product_ID
+)
+SELECT 
+  li.Product_ID,
+  li.Latest_Date,
+  ls.Last_Sold_Date,
+  DATEDIFF(li.Latest_Date, ls.Last_Sold_Date) AS Days_Without_Sale
+FROM 
+  latest_inventory li
+LEFT JOIN 
+  last_sold_date ls ON li.Product_ID = ls.Product_ID
+ORDER BY 
+  Days_Without_Sale DESC;
+
+
+
