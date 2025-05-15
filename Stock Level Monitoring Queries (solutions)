@@ -82,7 +82,7 @@ FROM
 
 3. 3. Basic Stockout Detection
 "Which products currently have inventory levels below forecast  (immediate restock candidates)?"
-•	Purpose: Flag urgent replenishment needs.
+ # Purpose: Flag urgent replenishment needs.
 
 
 WITH ranked_inventory AS (
@@ -110,3 +110,33 @@ WHERE
     FROM CTE1
      WHERE 
       Inventory_Level<Demand_Forecast
+
+
+# potential chances of stockout (diff<avg_diff):
+
+WITH ranked_inventory AS (
+  SELECT 
+    Product_ID,
+    Inventory_Level,Demand_Forecast,
+    Date,
+    ROW_NUMBER() OVER (PARTITION BY Product_ID ORDER BY Date DESC) AS rn
+  FROM 
+    final_fact
+),CTE1 AS (
+SELECT 
+  Product_ID,
+  Inventory_Level,
+   Demand_Forecast,
+  Date
+FROM 
+  ranked_inventory
+WHERE 
+  rn = 1)
+   SELECT 
+  Product_ID ,
+  Inventory_Level,
+   Demand_Forecast,(Inventory_Level-Demand_Forecast) AS diff 
+    FROM CTE1
+     WHERE 
+      (Inventory_Level-Demand_Forecast)<128.86 
+      
