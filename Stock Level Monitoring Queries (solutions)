@@ -210,3 +210,42 @@ ORDER BY
 
 
 
+# products unsold for >30 days, grouped by category to spot dead-stock patterns - no  products found 
+
+WITH last_sold AS (
+  SELECT 
+    Product_ID,
+    MAX(Date) AS Last_Sold_Date
+  FROM final_fact
+  WHERE Units_Sold > 0
+  GROUP BY Product_ID
+),
+latest_inventory_info AS (
+  SELECT 
+    f1.Product_ID,
+    c.Category,
+    MAX(f1.Date) AS Latest_Date
+  FROM final_fact f1
+   JOIN dim_cat c USING(cat_id)
+  GROUP BY f1.Product_ID, c.Category
+),
+inventory_age AS (
+  SELECT 
+    li.Product_ID,
+    li.Category,
+    ls.Last_Sold_Date,
+    li.Latest_Date,
+    DATEDIFF(li.Latest_Date, ls.Last_Sold_Date) AS Days_Unsold
+  FROM last_sold ls
+  JOIN latest_inventory_info li ON ls.Product_ID = li.Product_ID
+)
+SELECT 
+  Category,
+  COUNT(Product_ID) AS Dead_Stock_Count,
+  GROUP_CONCAT(Product_ID) AS Product_List
+FROM inventory_age
+WHERE Days_Unsold > 30
+GROUP BY Category
+ORDER BY Dead_Stock_Count DESC;
+
+
