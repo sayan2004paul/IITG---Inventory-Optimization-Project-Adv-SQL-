@@ -248,4 +248,46 @@ WHERE Days_Unsold > 30
 GROUP BY Category
 ORDER BY Dead_Stock_Count DESC;
 
+6.  Cross-Region Inventory Imbalance
+"Which SKUs are overstocked in one region but understocked in another, requiring inter-warehouse transfers?"
 
+
+WITH CTE AS (SELECT 
+ r.Region ,f.Product_ID, SUM(f.Inventory_Level) as total_stock
+FROM 
+ dim_regions r 
+  JOIN final_fact f USING(Reg_id)
+   GROUP BY 
+    r.region ,f.Product_ID
+     ORDER BY r.Region)
+     
+     SELECT *
+      FROM 
+       CTE a 
+        JOIN 
+         CTE b ON a.Product_ID=b.Product_ID AND 
+          a.Region!=b.Region
+
+7.  Dynamic Safety Stock Calculator
+"What is the optimal safety stock level per SKU, considering demand variability and lead time?"
+• Uses: Statistical functions (STDDEV, AVG) + conditional thresholds.(assuming the lead time is 7 days )
+
+SELECT 
+  Product_ID,
+  ROUND(1.65 * STDDEV(Units_Sold) * SQRT(7), 2) AS Safety_Stock_Level
+FROM 
+  final_fact
+GROUP BY 
+  Product_ID;
+
+
+#  "Which stores have the most SKUs with inventory levels below their demand forecast?"
+
+
+SELECT 
+ Store_ID, Inventory_Level, Demand_Forecast
+FROM 
+ final_fact 
+  WHERE 
+   YEAR(Date)=2024 AND 
+    Inventory_Level<Demand_Forecast
