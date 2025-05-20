@@ -1,10 +1,18 @@
 # Stock Level Monitoring Queries (solutions)
 
 1."What is the total inventory count per product category, and how is it distributed across warehouse regions?"
-•Purpose: Identify which categories dominate inventory and regional distribution 
+• Purpose: Identify which categories dominate inventory and regional distribution 
 
 
-# total  inventory count per product category 
+
+
+
+
+
+A ) Total Inventory count per product category 
+
+~ This query calculates the total inventory available for each product category across all locations.
+~ It helps identify which product categories have the highest stock volume, enabling better planning for promotions, storage allocation, and restocking priorities.
 
 
 SELECT 
@@ -20,7 +28,25 @@ SELECT
 
 
 
-#  total inventory count per category across regions        
+~ This query performs an inner join between the inventory fact table (final_fact) and the category dimension (dim_cat) using cat_id.
+~ It aggregates inventory levels by category and orders the results by total stock in descending order.
+
+
+
+
+
+
+
+
+
+
+B )  Total Inventory count per category across regions 
+
+
+ ~ This query breaks down the inventory count by both product category and region, offering a detailed view of regional stock distribution.
+ ~ It supports regional inventory balancing, warehouse planning, and helps detect disparities in stock levels across geographic zones.
+
+
  
  SELECT 
  f.cat_id, c.Category,r.Region,SUM(f.Inventory_Level ) AS total_inventory 
@@ -32,6 +58,19 @@ SELECT
         f.cat_id, c.Category,r.Region
          ORDER BY 
           Region ,Category , SUM(f.Inventory_Level ) DESC
+
+
+
+~ This query joins final_fact with both dim_cat (on cat_id) and dim_regions (on reg_id).
+~ It groups data by category and region, calculates total inventory, and orders the output for clear regional comparison.
+
+
+
+
+
+
+
+
 
 
 
