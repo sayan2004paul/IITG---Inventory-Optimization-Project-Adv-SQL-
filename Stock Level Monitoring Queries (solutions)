@@ -1,4 +1,13 @@
-# Stock Level Monitoring Queries (solutions)
+                                    ~  Stock Level Monitoring Queries (Code Documentation) ~ 
+
+
+
+
+
+
+
+
+
 
 1."What is the total inventory count per product category, and how is it distributed across warehouse regions?"
 • Purpose: Identify which categories dominate inventory and regional distribution 
@@ -75,11 +84,20 @@ B )  Total Inventory count per category across regions
 
 
 2.Fast vs. Slow-Moving Products
+
 "Which products have the highest and lowest sales-to-inventory ratios (indicating fast/slow movers)?"
-•	Purpose: Spot potential overstocks (low ratio) and stockout risks (high ratio).
+• Purpose: Spot potential overstocks (low ratio) and stockout risks (high ratio).
 
 
-# BASED ON PRODUCT_ID 
+
+A )  BASED ON PRODUCT_ID 
+
+~ Calculates the stocking ratio (units sold ÷ inventory level) for each product.
+~ Products with high ratios are fast-moving and at risk of stockouts, while those with low ratios may indicate overstocking or poor demand.
+
+
+
+
 
 WITH CTE AS (Select 
  Product_ID , (SUM(Units_Sold)/SUM(Inventory_Level)) AS stocking_ratio
@@ -99,7 +117,23 @@ FROM
            stocking_ratio DESC
 
 
-# BASED ON PRODUCT CATEGORY 
+
+~ A Common Table Expression (CTE) aggregates total Units_Sold and Inventory_Level by Product_ID, calculating the stocking ratio.
+ ~ A CASE statement then compares each product’s ratio to the average ratio across all products to label them as 'fast-movers' or 'slow-movers'.
+  ~ Results are sorted in descending order of the ratio for clear prioritization.
+
+
+
+
+
+
+
+
+B) BASED ON PRODUCT CATEGORY 
+
+~ Evaluates inventory efficiency at the category level, helping guide category-level purchasing, markdowns, or promotional strategies.
+
+
 
 WITH CTE AS (Select 
   c.Category , (SUM(f.Units_Sold)/SUM(f.Inventory_Level)) AS stocking_ratio
@@ -119,9 +153,37 @@ FROM
           ORDER BY 
             stocking_ratio DESC
 
+
+
+
+~ Joins final_fact with dim_cat to group data by Category.
+ ~ The CTE calculates each category’s stocking ratio (total sales ÷ total inventory).
+  ~ Uses a CASE logic to benchmark against the average category ratio, classifying each as a fast or slow mover.
+   ~ Sorted by stocking ratio to highlight the most and least efficient categories.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 3. Basic Stockout Detection
 "Which products currently have inventory levels below forecast  (immediate restock candidates)?"
  • Purpose: Flag urgent replenishment needs.
+
+
+
+~ Flags products whose latest inventory level is below forecasted demand, indicating they are urgent restock candidates. 
+~ This enables timely replenishment and prevents revenue loss due to stockouts.
+
+
 
 
 WITH ranked_inventory AS (
@@ -151,7 +213,28 @@ WHERE
       Inventory_Level<Demand_Forecast
 
 
-# potential chances of stockout (diff<avg_diff):
+
+
+
+~ A window function (ROW_NUMBER) is used to isolate the most recent inventory record per product.
+~ The latest Inventory_Level is compared with Demand_Forecast.
+~ Products where Inventory_Level < Demand_Forecast are selected for restocking.
+
+
+
+
+
+
+A)  Potential chances of stockout (diff<avg_diff):
+
+
+
+
+~ Identifies products where the gap between inventory and forecast (diff) is below a predefined average threshold (e.g., 128.86). 
+~ These products may not be out of stock yet, but are approaching critical levels and need monitoring.
+
+
+
 
 WITH ranked_inventory AS (
   SELECT 
@@ -178,13 +261,47 @@ WHERE
     FROM CTE1
      WHERE 
       (Inventory_Level-Demand_Forecast)<128.86 
+
+
+
+
+~ Builds on the same logic as Query 1 using the latest record per product.
+~ Computes the difference (Inventory_Level - Demand_Forecast) and filters records below a set threshold, identifying early signals of potential stockout.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       
 4. Regional Stock Comparisons
-"How does average inventory level compare between North, South, East, and West warehouses?"
+ "How does average inventory level compare between North, South, East, and West warehouses?"
  • Purpose: Reveal imbalances in regional stocking strategies.
 
 
- # region wise avg_inventory 
+
+
+ A)  Region wise avg_inventory 
+
+
+
+~ Shows the average inventory held in each major region (North, South, East, West),
+   helping assess whether stock is evenly distributed or over/under-stocked in specific regions.
+
+
 
 SELECT 
     r.Region,
@@ -197,7 +314,21 @@ SELECT
       r.Region
 
 
-# region and store wise avg_inventory 
+~ Joins final_fact with dim_regions using Reg_id.
+ ~ Groups by region and computes the average Inventory_Level, giving a macro-level view of inventory distribution by region.
+
+
+
+
+B)  Region and store wise avg_inventory 
+
+~ Adds store-level granularity to the regional view, identifying specific stores that are over- or understocked within a region. 
+ ~ This can support local redistribution or restocking decisions.
+
+
+
+
+
 
 
 SELECT 
@@ -214,9 +345,33 @@ FROM
 
 
 
+
+~ Uses the same join between final_fact and dim_regions.
+~ Groups data by both Region and Store_ID, and calculates the average inventory per store.
+~ Results are ordered to highlight inventory distribution patterns within each region.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 5. Inventory Age Tracking
 "Which products have been in inventory for the longest time without being sold?"
 • Purpose: Highlight stagnant inventory for clearance decisions.
+
+
+
+~ Determines how many days have passed since each product was last sold.
+ ~ Products with the longest inactivity are stuck in inventory and could be targets for clearance to free up space and working capital.
 
 
 
@@ -249,7 +404,27 @@ ORDER BY
 
 
 
-# products unsold for >30 days, grouped by category to spot dead-stock patterns - no  products found 
+
+~ Uses two CTEs:
+ ~last_sold_date: Gets the most recent sale date (Units_Sold > 0) per product.
+ ~latest_inventory: Gets the latest available record per product.
+  ~Joins both to calculate the difference in days since last sale using DATEDIFF().
+   ~ Results are sorted to bring attention to longest unsold products.
+
+
+
+
+
+
+
+A)  Products unsold for >30 days, grouped by category to spot dead-stock patterns -
+
+
+
+~ Identifies product categories with items unsold for more than 30 days, helping isolate dead stock trends at the category level for strategic clearance planning.
+
+
+
 
 WITH last_sold AS (
   SELECT 
@@ -287,8 +462,29 @@ WHERE Days_Unsold > 30
 GROUP BY Category
 ORDER BY Dead_Stock_Count DESC;
 
+
+
+
+~ Joins product inventory and category data.
+ ~ Filters products with no sales in over 30 days using DATEDIFF() > 30.
+  ~ Groups the result by category and lists affected Product_IDs using GROUP_CONCAT() for clarity.
+   ~ Highlights which categories contribute most to dead stock, even though currently, no products meet the condition.
+
+
+
+
+
+
 6.  Cross-Region Inventory Imbalance
 "Which SKUs are overstocked in one region but understocked in another, requiring inter-warehouse transfers?"
+
+
+
+~ Detects cases where the same SKU is overstocked in one region and understocked in another, 
+  ~ revealing opportunities for logistics optimization through internal transfers rather than new procurement.
+
+
+
 
 
 WITH CTE AS (SELECT 
@@ -307,9 +503,39 @@ FROM
          CTE b ON a.Product_ID=b.Product_ID AND 
           a.Region!=b.Region
 
+
+
+~ A CTE calculates the total inventory per Product_ID for each Region.
+ ~ A self-join is performed on the CTE to pair up the same product across two different regions.
+  ~While this setup flags potential imbalance, additional logic (e.g., comparing total_stock values across regions) should be added to differentiate overstock vs understock scenarios.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 7.  Dynamic Safety Stock Calculator
 "What is the optimal safety stock level per SKU, considering demand variability and lead time?"
 • Uses: Statistical functions (STDDEV, AVG) + conditional thresholds.(assuming the lead time is 7 days )
+
+
+
+~ Calculates an optimal safety stock level for each SKU based on demand variability (std. dev. of sales) and a lead time of 7 days, using a 95% service level (z-score = 1.65).
+ ~ This ensures that each product maintains a buffer stock to absorb demand fluctuations and reduce the risk of stockouts.
+
+
 
 SELECT 
   Product_ID,
@@ -320,7 +546,24 @@ GROUP BY
   Product_ID;
 
 
-#  "Which stores have the most SKUs with inventory levels below their demand forecast?"
+~ Aggregates sales data (Units_Sold) per Product_ID.
+ ~ Applies the safety stock formula:
+   ~ Safety Stock = Z * σ * √LeadTime
+     ~ where Z = 1.65 (95% service level), σ = STDDEV of sales.
+~Uses ROUND() for readability and GROUP BY to calculate per SKU.
+
+
+
+
+
+A)   "Which stores have the most SKUs with inventory levels below their demand forecast?"
+
+
+
+~ Flags store-SKU records for calendar year 2024 where current inventory is below demand forecast,
+ ~ indicating potential stockout risks that require urgent replenishment or reallocation.
+
+
 
 
 SELECT 
@@ -330,3 +573,11 @@ FROM
   WHERE 
    YEAR(Date)=2024 AND 
     Inventory_Level<Demand_Forecast
+
+
+
+
+
+~ Filters records where Inventory_Level < Demand_Forecast.
+ ~ Restricts the dataset to YEAR(Date) = 2024.
+  ~ Retrieves Store_ID, Inventory_Level, and Demand_Forecast to support store-level diagnostics and restock decisions.
