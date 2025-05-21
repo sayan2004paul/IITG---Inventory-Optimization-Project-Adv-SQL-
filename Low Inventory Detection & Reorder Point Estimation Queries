@@ -58,6 +58,38 @@ Date,Product_ID ,Inventory_Level
 
 
 
+3) What is the reorder point for each SKU, calculated as the average daily demand over the past 30 days multiplied by the lead time (e.g., 7 days)?
+   Purpose: Estimate a dynamic reorder point based on moving average demand.
+
+
+
+
+WITH past_30_sale AS ( SELECT 
+Date,Product_ID ,
+  SUM(Units_Sold) as total_qnt
+   FROM 
+    final_fact 
+    WHERE 
+     Date >= '2024-01-01' - INTERVAL '30'DAY 
+      GROUP BY 
+       Date,Product_ID),
+       
+       avg_demand AS  (SELECT 
+        Product_ID, 
+         AVG(total_qnt) AS avg_daily_demand
+          FROM 
+           past_30_sale
+            GROUP BY 
+             Product_ID)
+             
+             SELECT 
+              Product_ID, 
+               avg_daily_demand
+                ,7 AS lead_time_days
+                ,ROUND(avg_daily_demand*7,2) AS reorder_point
+                 FROM
+                  avg_demand 
+
 
 
 
