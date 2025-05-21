@@ -1,0 +1,69 @@
+                                         ~ Low Inventory Detection & Reorder Point Estimation Queries  ~
+
+
+1) 	What is the current inventory level for each product (SKU) across all stores?
+    Purpose: Build the baseline view of inventory quantity by Product_ID and Store_ID.
+
+
+
+
+WITH ranked_inventory AS (
+  SELECT 
+    Product_ID,Store_ID,
+    Inventory_Level,Demand_Forecast,
+    Date,
+    ROW_NUMBER() OVER (PARTITION BY Product_ID ORDER BY Date DESC) AS rn
+  FROM 
+    final_fact
+)
+SELECT 
+ Date ,
+   Store_ID  ,Product_ID ,  Inventory_Level
+
+FROM 
+  ranked_inventory
+WHERE rn=1
+ ORDER BY Inventory_Level DESC
+ 
+
+
+
+2) Which products currently have inventory below a fixed reorder point threshold (30 % of Avg Inventory Level)?
+   Purpose: Identify simple low-inventory candidates using a static threshold.
+
+
+
+
+WITH ranked_inventory AS (
+  SELECT 
+    Product_ID,Store_ID,
+    Inventory_Level,Demand_Forecast,
+    Date,
+    ROW_NUMBER() OVER (PARTITION BY Product_ID ORDER BY Date DESC) AS rn
+  FROM 
+    final_fact
+)
+SELECT 
+Date,Product_ID ,Inventory_Level
+  FROM 
+   ranked_inventory
+     WHERE 
+      Inventory_Level<(0.3*256)
+       AND rn=1
+   
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
