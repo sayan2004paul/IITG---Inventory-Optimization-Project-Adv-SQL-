@@ -64,38 +64,46 @@ Date,Product_ID ,Inventory_Level
 
 
 
-WITH past_30_sale AS ( SELECT 
-Date,Product_ID ,
-  SUM(Units_Sold) as total_qnt
-   FROM 
-    final_fact 
-    WHERE 
-     Date >= '2024-01-01' - INTERVAL '30'DAY 
-      GROUP BY 
-       Date,Product_ID),
-       
-       avg_demand AS  (SELECT 
-        Product_ID, 
-         AVG(total_qnt) AS avg_daily_demand
-          FROM 
-           past_30_sale
-            GROUP BY 
-             Product_ID)
-             
-             SELECT 
-              Product_ID, 
-               avg_daily_demand
-                ,7 AS lead_time_days
-                ,ROUND(avg_daily_demand*7,2) AS reorder_point
-                 FROM
-                  avg_demand 
+WITH past_30_sale AS (
+  SELECT 
+    Date, Product_ID,
+    SUM(Units_Sold) AS total_qnt
+  FROM final_fact
+  WHERE Date >= '2024-01-01' - INTERVAL 30 DAY
+  GROUP BY Date, Product_ID
+),
 
+avg_demand AS (
+  SELECT 
+    Product_ID,
+    AVG(total_qnt) AS avg_daily_demand
+  FROM past_30_sale
+  GROUP BY Product_ID
+),
 
+reorder_point AS (
+  SELECT 
+    Product_ID,
+    avg_daily_demand,
+    7 AS lead_time_days,
+    ROUND(avg_daily_demand * 7, 2) AS reorder_point
+  FROM avg_demand
+),
 
+latest_inventory AS (
+  SELECT 
+    Product_ID,
+    Inventory_Level
+  FROM final_fact
+  WHERE Date = (SELECT MAX(Date) FROM final_fact)
+)
 
-
- 
-
-
+SELECT 
+  r.Product_ID,
+  r.avg_daily_demand,
+  r.reorder_point,
+  l.Inventory_Level
+FROM reorder_point r
+JOIN latest_inventory l ON r.Product_ID = l.Product_ID;
 
 
