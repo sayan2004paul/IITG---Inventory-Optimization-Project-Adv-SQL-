@@ -154,5 +154,53 @@ JOIN latest_inventory l ON r.Product_ID = l.Product_ID
  WHERE 
   l.total_inv<r.reorder_point
 
+
+
+
+
+
+
+
+
+
+
+
+
+5) What is the average demand variability (standard deviation) per SKU, and how can that inform a safety stock buffer?
+   Purpose: Incorporate uncertainty into your reorder point formula.
+
+
+
+
+
+WITH daily_demand AS (
+  SELECT 
+    Product_ID,
+    Date,
+    SUM(Units_Sold) AS daily_units_sold
+  FROM final_fact
+  WHERE Date >= '2024-01-01' - INTERVAL 30 DAY
+  GROUP BY Product_ID, Date
+),
+demand_stats AS (
+  SELECT 
+    Product_ID,
+    AVG(daily_units_sold) AS avg_daily_demand,
+    STDDEV(daily_units_sold) AS demand_variability,
+    COUNT(DISTINCT Date) AS active_days
+  FROM daily_demand
+  GROUP BY Product_ID
+)
+SELECT 
+  ds.Product_ID,
+  ds.avg_daily_demand,
+  ds.demand_variability,
+  ds.active_days,
+  -- Example safety stock calculation (z-score of 1.65 for 95% service level)
+  ROUND(1.65 * ds.demand_variability * SQRT(7), 2) AS safety_stock,
+  -- Reorder point calculation
+  ROUND((ds.avg_daily_demand * 7) + (1.65 * ds.demand_variability * SQRT(7)), 2) AS reorder_point
+FROM demand_stats ds
+ORDER BY ds.demand_variability DESC;
   
   
