@@ -62,48 +62,41 @@ Date,Product_ID ,Inventory_Level
    Purpose: Estimate a dynamic reorder point based on moving average demand.
 
 
-
-
-WITH past_30_sale AS (
-  SELECT 
-    Date, Product_ID,
-    SUM(Units_Sold) AS total_qnt
-  FROM final_fact
-  WHERE Date >= '2024-01-01' - INTERVAL 30 DAY
-  GROUP BY Date, Product_ID
-),
-
-avg_demand AS (
+WITH past_30_days AS (
   SELECT 
     Product_ID,
-    AVG(total_qnt) AS avg_daily_demand
-  FROM past_30_sale
+    SUM(Units_Sold) AS total_units,
+    COUNT(DISTINCT Date) AS active_days,
+    SUM(Units_Sold)/COUNT(DISTINCT Date) AS avg_daily_demand
+  FROM final_fact
+  WHERE Date >= '2024-01-01' - INTERVAL 30 DAY
   GROUP BY Product_ID
-),
-
-reorder_point AS (
-  SELECT 
+) 
+  ,reorder AS ( SELECT 
     Product_ID,
     avg_daily_demand,
     7 AS lead_time_days,
     ROUND(avg_daily_demand * 7, 2) AS reorder_point
-  FROM avg_demand
-),
-
-latest_inventory AS (
+  FROM past_30_days
+  ),
+  latest_inventory AS (
   SELECT 
     Product_ID,
-    Inventory_Level
+    SUM(Inventory_Level) AS total_inv
   FROM final_fact
   WHERE Date = (SELECT MAX(Date) FROM final_fact)
+   GROUP BY 
+    Product_ID
 )
-
 SELECT 
   r.Product_ID,
   r.avg_daily_demand,
   r.reorder_point,
-  l.Inventory_Level
-FROM reorder_point r
+  l.total_inv
+FROM reorder r
 JOIN latest_inventory l ON r.Product_ID = l.Product_ID;
+
+  
+  
 
 
