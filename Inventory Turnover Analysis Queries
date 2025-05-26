@@ -1,0 +1,50 @@
+                                          ~ Inventory Turnover Analysis Queries ~
+
+
+
+1)  What is the inventory turnover ratio per SKU and store over the last 3/6 months?
+  Purpose: Identify fast vs. slow-moving products using the classic formula
+
+
+
+A) For last 3 months 
+
+
+SELECT 
+    Store_ID,
+    Product_ID,
+    SUM(Units_Sold) AS total_units_sold,
+    ROUND(AVG(Inventory_Level), 2) AS avg_inventory_level,
+    ROUND(SUM(Units_Sold) / NULLIF(AVG(Inventory_Level), 0), 2) AS inventory_turnover_ratio
+FROM 
+    final_fact
+WHERE 
+    Date BETWEEN '2023-10-01' AND '2024-01-01'
+GROUP BY 
+    Store_ID, Product_ID
+ORDER BY 
+    Store_ID,inventory_turnover_ratio DESC;
+
+
+
+B) For last 6 months 
+
+
+SELECT 
+    Store_ID,
+    Product_ID,
+    SUM(Units_Sold) AS total_units_sold,
+    ROUND(AVG(Inventory_Level), 2) AS avg_inventory_level,
+    ROUND(SUM(Units_Sold) / NULLIF(AVG(Inventory_Level), 0), 2) AS inventory_turnover_ratio
+FROM 
+    final_fact
+WHERE 
+    Date BETWEEN '2023-07-01' AND '2024-01-01'
+GROUP BY 
+    Store_ID, Product_ID
+ORDER BY 
+    Store_ID,inventory_turnover_ratio DESC;
+
+
+
+
