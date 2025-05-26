@@ -24,6 +24,16 @@ FROM
   ranked_inventory
 WHERE rn=1
  ORDER BY Inventory_Level DESC
+
+
+~ This query retrieves the most recent inventory record for each product by assigning row numbers (ROW_NUMBER) partitioned by Product_ID and ordered by Date descending. 
+~ It filters for the latest entry (rn = 1) and ranks stores by current Inventory_Level in descending order, supporting inventory optimization analysis.
+
+
+
+
+
+
  
 
 
@@ -51,6 +61,20 @@ Date,Product_ID ,Inventory_Level
       Inventory_Level<(0.3*256)
        AND rn=1
    
+
+
+
+~ This SQL script identifies low-stock products based on the latest inventory data. 
+~ It uses a Common Table Expression (CTE) ranked_inventory to assign row numbers to inventory records partitioned by Product_ID and ordered by Date descending, ensuring the most recent record is selected (rn = 1). 
+~ The final SELECT filters products whose Inventory_Level is below 30% of the threshold value (i.e., less than 76.8, from 0.3 * 256), indicating potential stockout risk.
+~ This logic supports proactive inventory replenishment and demand planning.
+
+
+
+
+
+
+
 
 
 
@@ -97,7 +121,21 @@ FROM reorder r
 JOIN latest_inventory l ON r.Product_ID = l.Product_ID;
 
   
-  
+
+~ This query calculates reorder points for products based on recent sales trends and compares them with current inventory levels. It involves three CTEs:
+
+a) past_30_days computes average daily demand per product over the last 30 days using SUM(Units_Sold)/COUNT(DISTINCT Date).
+b) reorder estimates the reorder point using the formula: avg_daily_demand × lead_time (7 days), rounded for precision.
+c) latest_inventory aggregates current inventory per product as of the most recent date.
+d) The final SELECT joins reorder thresholds with current stock levels to support data-driven replenishment decisions.
+
+
+
+
+
+
+
+
 
 
 
@@ -203,4 +241,15 @@ SELECT
 FROM demand_stats ds
 ORDER BY ds.demand_variability DESC;
   
-  
+
+
+
+
+
+
+~ This query identifies products that require restocking by comparing current inventory with dynamically calculated reorder points. It uses:
+
+a) past_30_days CTE to calculate average daily demand per product over the last 30 days.
+b) reorder CTE to compute the reorder point assuming a fixed 7-day lead time (avg_daily_demand × 7).
+c) latest_inventory CTE to fetch current inventory levels for the latest available date.
+d) The final result filters for products where total_inv < reorder_point, flagging items at risk of stockouts and enabling timely replenishment actions.
