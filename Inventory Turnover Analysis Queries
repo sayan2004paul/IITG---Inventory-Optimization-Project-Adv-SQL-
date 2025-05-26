@@ -48,3 +48,45 @@ ORDER BY
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+2) Which SKUs have the lowest turnover ratio across all stores and categories?(for last 6 months)
+  Purpose: Pinpoint underperforming SKUs locking up capital.
+
+
+SELECT 
+    f.Product_ID AS SKU,
+    c.Category,
+    f.Store_ID,
+    SUM(f.Units_Sold) AS total_units_sold,
+    AVG(f.Inventory_Level) AS avg_inventory_level,
+    (SUM(f.Units_Sold) / AVG(f.Inventory_Level)) AS inventory_turnover_ratio
+FROM 
+final_fact f 
+ JOIN 
+  dim_cat c USING(cat_id)
+   WHERE 
+        f.Date BETWEEN DATE_SUB('2024-01-01', INTERVAL 6 MONTH) AND '2024-01-01'
+
+ GROUP BY 
+    f.Product_ID, c.Category, f.Store_ID
+ORDER BY 
+	inventory_turnover_ratio ASC;
+
+
+
+
+
+
