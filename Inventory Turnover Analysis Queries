@@ -133,3 +133,56 @@ END) AS movement_class
  FROM CTE1 
     ORDER  BY 
         Store_ID , holding_period DESC
+
+
+
+
+
+
+ 4) How does inventory turnover vary across product categories and regions?
+ Purpose: Spot patterns in product velocity based on category/market traits.
+
+
+
+
+
+A) Across category 
+
+SELECT 
+    c.Category,
+  
+    ROUND((SUM(f.Units_Sold) * 365.0) / SUM(f.Inventory_Level), 2) AS inventory_turnover_annualized
+FROM 
+    final_fact f 
+	JOIN dim_cat c ON f.cat_id = c.cat_id
+    JOIN dim_regions r ON f.Reg_id = r.Reg_id
+WHERE 
+    f.Date BETWEEN '2023-07-01' AND '2024-01-01'
+GROUP BY 
+    c.Category
+ORDER BY 
+    c.Category
+
+
+
+
+
+B) Across regions 
+
+
+
+
+
+SELECT 
+   r.Region,
+  
+    ROUND((SUM(f.Units_Sold) * 365.0) / SUM(f.Inventory_Level), 2) AS inventory_turnover_annualized
+FROM 
+    final_fact f 
+    JOIN dim_regions r ON f.Reg_id = r.Reg_id
+WHERE 
+    f.Date BETWEEN '2023-07-01' AND '2024-01-01'
+GROUP BY 
+    r.Region
+ORDER BY 
+r.Region
