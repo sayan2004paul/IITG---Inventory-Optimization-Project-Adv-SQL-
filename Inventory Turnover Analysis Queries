@@ -90,3 +90,46 @@ ORDER BY
 
 
 
+
+
+
+3)  What is the average inventory holding period (in days) per SKU and store?
+    Purpose: Translate turnover ratio into business-understandable "stock sits X days" view.
+
+
+
+
+
+WITH CTE AS (SELECT 
+    f.Product_ID AS SKU,
+    f.Store_ID,
+    (SUM(f.Units_Sold) / AVG(f.Inventory_Level)) AS inventory_turnover_ratio
+FROM 
+final_fact f 
+ JOIN 
+  dim_cat c USING(cat_id)
+   WHERE 
+        f.Date BETWEEN DATE_SUB('2024-01-01', INTERVAL 6 MONTH) AND '2024-01-01'
+   GROUP BY 
+    f.Product_ID , f.Store_ID
+    ORDER BY 
+	inventory_turnover_ratio ASC),
+
+    CTE1 AS (
+     SELECT 
+     Store_ID, SKU , ROUND(183/inventory_turnover_ratio,2) AS holding_period
+      FROM   CTE
+       ORDER  BY 
+        Store_ID , holding_period DESC)
+        
+
+        SELECT 
+         Store_ID , SKU ,holding_period,
+         ( CASE 
+  WHEN holding_period <= 2 THEN 'Fast-moving'
+  WHEN holding_period > 2 AND holding_period <= 2.2 THEN 'Medium-moving'
+  ELSE 'Slow-moving'
+END) AS movement_class
+ FROM CTE1 
+    ORDER  BY 
+        Store_ID , holding_period DESC
