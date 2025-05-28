@@ -37,3 +37,34 @@ CTE1 AS (SELECT
      FROM CTE1 
       WHERE rnk<=5
 
+
+
+
+
+
+
+
+Question 2:
+Write a solution to rank product categories by their total seasonal demand. For each season, rank the categories by total units sold. If two categories tie, assign them the same rank. Use dense ranking.
+
+
+
+WITH CTE AS (SELECT 
+ s.Seasonality, c.Category, SUM(f.Units_Sold) AS total_units 
+FROM 
+ final_fact f 
+  JOIN 
+   dim_cat c ON f.cat_id=c.cat_id
+    JOIN 
+     dim_seasons s 
+      ON f.season_id=s.season_id
+       GROUP BY 
+          s.Seasonality, c.Category)
+          
+          SELECT 
+             Seasonality, Category, total_units,
+              DENSE_RANK()
+               OVER(PARTITION BY  Seasonality ORDER BY  total_units DESC) AS rnk
+                FROM CTE 
+
+
