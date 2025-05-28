@@ -1,0 +1,39 @@
+Question 1:
+Write a solution to find the average monthly units sold for each product across all seasons. Identify the top 5 products with the highest average monthly sales.
+
+
+A) Top 5 products across all seasons 
+
+SELECT 
+    f.Product_ID,
+    s.Seasonality,
+    SUM(f.Units_Sold) / 3.0 AS avg_monthly_units_sold
+FROM final_fact f
+JOIN dim_seasons s ON f.season_id = s.season_id
+GROUP BY f.Product_ID, s.Seasonality
+ORDER BY avg_monthly_units_sold DESC
+LIMIT 5;
+
+
+
+
+B) Top 5 products of every season
+
+WITH CTE AS (SELECT 
+    f.Product_ID,
+    s.Seasonality,
+    SUM(f.Units_Sold) / 3.0 AS avg_monthly_units_sold
+FROM final_fact f
+JOIN dim_seasons s ON f.season_id = s.season_id
+GROUP BY f.Product_ID, s.Seasonality
+ORDER BY Seasonality ,Product_ID,avg_monthly_units_sold DESC),
+
+CTE1 AS (SELECT 
+ Product_ID, Seasonality , avg_monthly_units_sold,
+ DENSE_RANK()OVER(PARTITION BY Seasonality ORDER BY  avg_monthly_units_sold DESC) AS rnk
+  FROM CTE)
+  SELECT 
+    Product_ID, Seasonality , avg_monthly_units_sold
+     FROM CTE1 
+      WHERE rnk<=5
+
