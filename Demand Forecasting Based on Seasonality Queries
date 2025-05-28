@@ -100,3 +100,42 @@ FROM product_volatility
 ORDER BY volatility_rank;
 
 
+
+
+
+
+
+
+
+
+Question 3:
+Write a solution to identify seasonal sales volatility for each product. Calculate the standard deviation of units sold across seasons and rank the products by volatility.
+
+
+
+WITH product_season_sales AS (
+    SELECT 
+        f.Product_ID,
+        s.Seasonality,
+        SUM(f.Units_Sold) AS total_units_sold
+    FROM final_fact f
+    JOIN dim_seasons s ON f.season_id = s.season_id
+    GROUP BY f.Product_ID, s.Seasonality
+),
+
+product_volatility AS (
+    SELECT 
+        Product_ID,
+        STDDEV_SAMP(total_units_sold) AS sales_std_dev
+    FROM product_season_sales
+    GROUP BY Product_ID
+)
+
+SELECT 
+    Product_ID,
+    ROUND(sales_std_dev, 2) AS standard_deviation_of_units_sold,
+    DENSE_RANK() OVER (ORDER BY sales_std_dev DESC) AS volatility_rank
+FROM product_volatility
+ORDER BY volatility_rank;
+
+
