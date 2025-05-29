@@ -27,6 +27,19 @@ ORDER BY
 
 
 
+
+~This query calculates inventory turnover ratio for each Store_ID and Product_ID over Q4 2023 by summarizing sales and average inventory levels. 
+~It uses aggregation functions like SUM() and AVG(), applies NULL-safe division using NULLIF() to prevent division-by-zero errors, and rounds numerical outputs for clarity.
+~It demonstrates analytical skills in KPI calculation, date filtering, grouping, and multi-level sorting.
+
+
+
+
+
+
+
+
+
 B) For last 6 months 
 
 
@@ -45,6 +58,10 @@ GROUP BY
 ORDER BY 
     Store_ID,inventory_turnover_ratio DESC;
 
+
+~This query computes the inventory turnover ratio for each Store_ID and Product_ID over a 7-month period (July 2023 to January 2024). 
+~It aggregates total units sold and calculates the average inventory level using SUM() and AVG(). 
+~The ratio is safely calculated with NULLIF() to avoid division by zero, and results are rounded for readability. It employs date filtering, grouping, and ordering to rank products by turnover within each store.
 
 
 
@@ -84,6 +101,13 @@ final_fact f
     f.Product_ID, c.Category, f.Store_ID
 ORDER BY 
 	inventory_turnover_ratio ASC;
+
+
+
+~This query calculates the inventory turnover ratio by Product_ID (SKU), Category, and Store_ID over the last 6 months before January 2024.
+~It performs an INNER JOIN between a fact table and a dimension table (dim_cat) to enrich sales data with product categories. 
+~Aggregations SUM() and AVG() compute total units sold and average inventory level, with the turnover ratio calculated as their division.
+~The query uses date range filtering, grouping on multiple columns, and orders results ascending by turnover ratio to highlight low-turnover items.
 
 
 
@@ -136,6 +160,17 @@ END) AS movement_class
 
 
 
+~This query uses Common Table Expressions (CTEs) to calculate and classify product movement speed by Store_ID and SKU. 
+~The first CTE computes the inventory turnover ratio over the last 6 months.
+~The second CTE calculates the holding period (days inventory is held) by dividing a fixed period (183 days) by the turnover ratio. 
+~Finally, it classifies products into ‘Fast-moving’, ‘Medium-moving’, or ‘Slow-moving’ based on holding period thresholds using a CASE statement. 
+~It demonstrates advanced SQL concepts like CTEs, windowing logic, conditional classification, and ordered result sets.
+
+
+
+
+
+
 
 
 
@@ -165,6 +200,13 @@ ORDER BY
 
 
 
+~This query calculates the annualized inventory turnover ratio by product Category over a 7-month period (July 2023 to January 2024).
+~It aggregates total units sold and inventory levels, then scales the turnover ratio to a yearly basis by multiplying by 365. 
+~The query uses JOINs to enrich data with category and regional information, applies date filtering, groups results by category, and orders alphabetically. 
+~This showcases skills in data aggregation, time normalization, and multi-table joins.
+
+
+
 
 
 B) Across regions 
@@ -186,3 +228,13 @@ GROUP BY
     r.Region
 ORDER BY 
 r.Region
+
+
+
+
+
+
+~This query calculates the annualized inventory turnover ratio by Region for the period July 2023 to January 2024.
+~It aggregates total units sold and inventory levels, then annualizes the turnover by scaling with 365 days.
+~The query uses a JOIN to link sales data with region details, applies date filtering, groups by region, and sorts results alphabetically.
+~It demonstrates competency in regional performance analysis, aggregation, and time-based KPI normalization.
