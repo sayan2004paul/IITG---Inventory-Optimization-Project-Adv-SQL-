@@ -15,6 +15,18 @@ ORDER BY avg_monthly_units_sold DESC
 LIMIT 5;
 
 
+~This query identifies the top 5 products with the highest average monthly units sold per seasonality category.
+~It joins the fact table with a seasonality dimension to classify sales by season, aggregates total units sold per product and season, and divides by 3 to calculate the average monthly sales (assuming a 3-month season).
+~The results are grouped by product and season, ordered descending by average monthly sales to highlight top performers. 
+~This showcases use of joins, aggregation, grouping, arithmetic operations, and result limiting.
+
+
+
+
+
+
+
+
 
 
 B) Top 5 products of every season
@@ -38,6 +50,12 @@ CTE1 AS (SELECT
       WHERE rnk<=5
 
 
+
+~This query identifies the top 5 products per season based on average monthly units sold using Common Table Expressions (CTEs). 
+~The first CTE calculates the average monthly sales per product and season. 
+~The second CTE applies the DENSE_RANK() window function partitioned by Seasonality to rank products by sales within each season.
+~Finally, it filters to return only the top 5 products per season.
+~This demonstrates advanced SQL concepts including window functions, partitioning, and ranking, combined with aggregation and filtering.
 
 
 
@@ -69,37 +87,10 @@ FROM
 
 
 
-Question 3:
-Write a solution to identify seasonal sales volatility for each product. Calculate the standard deviation of units sold across seasons and rank the products by volatility.
-
-
-
-WITH product_season_sales AS (
-    SELECT 
-        f.Product_ID,
-        s.Seasonality,
-        SUM(f.Units_Sold) AS total_units_sold
-    FROM final_fact f
-    JOIN dim_seasons s ON f.season_id = s.season_id
-    GROUP BY f.Product_ID, s.Seasonality
-),
-
-product_volatility AS (
-    SELECT 
-        Product_ID,
-        STDDEV_SAMP(total_units_sold) AS sales_std_dev
-    FROM product_season_sales
-    GROUP BY Product_ID
-)
-
-SELECT 
-    Product_ID,
-    ROUND(sales_std_dev, 2) AS standard_deviation_of_units_sold,
-    DENSE_RANK() OVER (ORDER BY sales_std_dev DESC) AS volatility_rank
-FROM product_volatility
-ORDER BY volatility_rank;
-
-
+~This query ranks product Categories by their total seasonal demand using dense ranking.
+~It aggregates total units sold per Seasonality and Category in a CTE, then applies the DENSE_RANK() window function partitioned by season to rank categories based on sales volume.
+~Ties receive the same rank, ensuring accurate ranking without gaps.
+~This highlights skills in multi-table joins, grouping, window functions, and handling of ties in ranking.
 
 
 
@@ -138,4 +129,15 @@ SELECT
 FROM product_volatility
 ORDER BY volatility_rank;
 
+
+
+
+
+
+
+
+~This query measures seasonal sales volatility per product by calculating the standard deviation of units sold across different seasons. 
+~It uses two CTEs: the first aggregates total units sold by Product_ID and Seasonality, and the second computes the sample standard deviation (STDDEV_SAMP) of these seasonal sales per product.
+~Finally, it ranks products by volatility using DENSE_RANK(), highlighting those with the most fluctuating sales.
+~This demonstrates proficiency in statistical functions, window ranking, and multi-level aggregation.
 
