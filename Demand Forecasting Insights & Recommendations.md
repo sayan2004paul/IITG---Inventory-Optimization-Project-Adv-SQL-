@@ -62,7 +62,8 @@ The data reveals distinct **seasonal demand patterns**, with Furniture peaking 
 
 \- \*\*Risk:\*\* Avoid year-round overstocking; plan markdowns post-season.
 
-\---
+# recommendations left
+
 
 
 
