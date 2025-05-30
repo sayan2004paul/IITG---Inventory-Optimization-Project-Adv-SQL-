@@ -40,6 +40,9 @@ WHERE overstock_rank <= 5
 ORDER BY overstock_rank;
 
 
+~This query calculates overstock for each product as the difference between total inventory and units sold over the last six months.
+~It uses aggregation to sum inventory and sales, then ranks products by overstock amount using the DENSE_RANK() window function. 
+~Finally, it returns the top 5 products with the highest overstock, helping identify excess inventory for better stock management.
 
 
 
@@ -95,6 +98,16 @@ WHERE excess_rank <= 5
 ORDER BY excess_rank DESC;
 
 
+~This query identifies the top 5 products where units ordered significantly exceed units sold in the past six months. 
+~It filters and joins sales and category data, then aggregates total units ordered and sold per product. 
+~The excess order amount is calculated as the difference between units ordered and units sold. 
+~Using DENSE_RANK(), products are ranked by this excess, and only those with more orders than sales are selected, highlighting products with potentially overestimated demand or inventory issues.
+
+
+
+
+
+
 
 
 
@@ -143,3 +156,14 @@ FROM ranked_mismatch
 WHERE mismatch_rank <= 5
 ORDER BY mismatch_rank ;
 
+
+
+
+
+
+
+~This query calculates the reorder mismatch rate for each product over the last six months, 
+~defined as the absolute difference between units ordered and units sold divided by units ordered (expressed as a percentage).
+~It filters and aggregates the relevant data, ensuring no division by zero with NULLIF.
+~The mismatch rates are ranked using DENSE_RANK(), and the query returns the top 5 products with the highest mismatch rates,
+~highlighting items with significant ordering vs. sales discrepancies for better inventory adjustment.
