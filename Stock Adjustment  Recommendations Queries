@@ -93,3 +93,53 @@ FROM ranked_excess
 WHERE excess_rank <= 5
  AND total_units_ordered > total_units_sold
 ORDER BY excess_rank DESC;
+
+
+
+
+
+
+Q3) Write a solution to calculate the reorder mismatch rate for each product. The mismatch rate is defined as (ABS(Units Ordered – Units Sold) / Units Ordered). Return the top 5 products with the highest mismatch rate.
+
+
+
+WITH filtered_data AS (
+    SELECT *
+    FROM final_fact f
+     JOIN 
+      dim_cat c  USING(cat_id)
+    WHERE Date >= DATE_SUB('2024-01-01', INTERVAL 6 MONTH)
+),
+
+mismatch_rate AS (
+    SELECT 
+        Product_ID,
+        Category,
+        SUM(Units_Ordered) AS total_units_ordered,
+        SUM(Units_Sold) AS total_units_sold,
+     ROUND(
+    ABS(SUM(Units_Ordered) - SUM(Units_Sold)) * 100.0 / NULLIF(SUM(Units_Ordered), 0),
+    2
+) AS mismatch_rate
+    FROM filtered_data
+    GROUP BY Product_ID, Category
+),
+
+ranked_mismatch AS (
+    SELECT 
+        *,
+        DENSE_RANK() OVER (ORDER BY mismatch_rate DESC) AS mismatch_rank
+    FROM mismatch_rate
+)
+
+SELECT 
+    Product_ID,
+    Category,
+    total_units_ordered,
+    total_units_sold,
+    mismatch_rate,
+    mismatch_rank
+FROM ranked_mismatch
+WHERE mismatch_rank <= 5
+ORDER BY mismatch_rank ;
+
