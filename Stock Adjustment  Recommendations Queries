@@ -38,3 +38,58 @@ SELECT
 FROM ranked_overstock
 WHERE overstock_rank <= 5
 ORDER BY overstock_rank;
+
+
+
+
+
+
+
+
+
+
+
+
+Q2) Write a solution to find products where units ordered were significantly higher than units sold. For each product, 
+calculate the excess order amount as (Units Ordered – Units Sold) and identify the top 5
+
+
+
+
+WITH filtered_data AS (
+    SELECT *
+    FROM final_fact f
+     JOIN 
+      dim_cat c  USING(cat_id)
+    WHERE Date >= DATE_SUB('2024-01-01', INTERVAL 6 MONTH)
+),
+
+product_excess AS (
+    SELECT 
+        Product_ID,
+        Category,
+        SUM(Units_Ordered) AS total_units_ordered,
+        SUM(Units_Sold) AS total_units_sold,
+        (SUM(Units_Ordered) - SUM(Units_Sold)) AS excess_amount
+    FROM filtered_data
+    GROUP BY Product_ID, Category
+),
+
+ranked_excess AS (
+    SELECT 
+        *,
+        DENSE_RANK() OVER (ORDER BY excess_amount DESC) AS excess_rank
+    FROM product_excess
+)
+
+SELECT 
+    Product_ID,
+    Category,
+    total_units_ordered,
+    total_units_sold,
+    excess_amount,
+    excess_rank
+FROM ranked_excess
+WHERE excess_rank <= 5
+ AND total_units_ordered > total_units_sold
+ORDER BY excess_rank DESC;
