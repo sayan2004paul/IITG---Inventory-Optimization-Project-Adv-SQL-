@@ -95,3 +95,48 @@
 - Fast-Movers (700+ units/day) → Stock aggressively.
 
 - Slow-Movers (<690 units/day) → De-stock or liquidate.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Recommendation 
+
+# Actionable Recommendations for Fast vs. Slow-Moving Products
+## 1. For Fast-Moving Products (Top 20%)
+ - Dynamic Reorder Points:
+
+- Set automated reorder triggers at 1.5x lead time demand to prevent stockouts.
+ Prime Placement:
+
+- Allocate high-visibility shelf space in stores/warehouses.
+ Demand Sensing:
+
+- Integrate AI-based forecasting (e.g., Prophet, ARIMA) to predict seasonal spikes.
+
+## 2. For Slow-Moving (Middle 30%)
+- Promotional Levers:
+
+- Bundle with fast-movers (e.g., "Buy P0011, get P0017 at 20% off").
+
+- Test flash sales or loyalty discounts.
+   Supplier Negotiation:
+
+- Shift to JIT ordering to reduce holding costs.
+
+## 3. For Slowest-Movers (Bottom 50%)
+-  Liquidation Plan:
+
+-  Clear stock via B2B marketplaces or bulk discounts.
+ - SKU Rationalization:
+
+- Discontinue P0002 (worst performer) unless strategic.
