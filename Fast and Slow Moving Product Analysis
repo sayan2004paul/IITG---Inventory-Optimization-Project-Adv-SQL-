@@ -1,0 +1,32 @@
+Q1) Identify the Top 5 Fast-Moving Products Based on Sales Velocity
+Write a solution to find the top 5 fast-moving products based on average units sold per day over the last 6 months.
+For each product, calculate the sales velocity as (Total Units Sold / Number of Active Selling Days). Rank products in descending order of sales velocity and return the top 5.
+
+ 
+ 
+ 
+ WITH last_6_months_data AS (
+    SELECT 
+        Product_ID,
+        Date,
+        Units_Sold
+    FROM final_fact
+    WHERE  Date >= DATE_SUB('2024-01-01', INTERVAL 6 MONTH))
+,
+product_sales_summary AS (
+    SELECT
+        Product_ID,
+        SUM(Units_Sold) AS total_units_sold,
+        COUNT(DISTINCT Date) AS active_selling_days,
+        SUM(Units_Sold) * 1.0 / NULLIF(COUNT(DISTINCT Date), 0) AS sales_velocity
+    FROM last_6_months_data
+    GROUP BY Product_ID
+)
+SELECT 
+    Product_ID,
+    total_units_sold,
+    active_selling_days,
+    ROUND(sales_velocity, 2) AS sales_velocity
+FROM product_sales_summary
+ORDER BY sales_velocity DESC
+LIMIT 5;
