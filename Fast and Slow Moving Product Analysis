@@ -33,6 +33,24 @@ LIMIT 5;
 
 
 
+~This SQL query identifies the top 5 fast-moving products by calculating their sales velocity. 
+~It uses two CTEs: last_6_months_data filters sales data for the last 6 months using DATE_SUB and INTERVAL.
+~product_sales_summary then aggregates this data, calculating total_units_sold, active_selling_days (using COUNT(DISTINCT Date)), and sales_velocity (Total Units Sold / Active Selling Days, with NULLIF to prevent division by zero). 
+~Finally, it orders products by sales_velocity in descending order and returns the top 5, rounded to two decimal places using ROUND.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -81,6 +99,27 @@ SELECT
 FROM combined
 ORDER BY inventory_to_sales_ratio DESC
 LIMIT 5;
+
+
+
+
+~This SQL query identifies the 5 slowest-moving products with high inventory levels by calculating their inventory_to_sales_ratio.
+~It uses CTEs: latest_inventory and clean_inventory to accurately fetch the most recent Inventory_Level using ROW_NUMBER() for each Product_ID. 
+~sales_summary calculates total_units_sold. These are combined to compute the ratio, excluding products with total_units_sold = 0 using NULLIF and a WHERE clause.
+~Finally, it ranks and returns the top 5 products with the highest ratio, rounded to four decimal places.
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 Q3) Classify All Products as ‘Fast-Moving’ or ‘Slow-Moving’
@@ -141,3 +180,18 @@ CROSS JOIN threshold_calc t
 ORDER BY 
     p.total_quantity DESC,
     p.daily_sale_rate DESC;
+
+
+
+
+
+
+~This comprehensive SQL query classifies products as 'Fast-Moving' or 'Slow-Moving' and segments them by volume and performance.
+~The product_stats CTE calculates total sales, active selling days in the last 30, and daily_sale_rate (using DATEDIFF to determine the sales period) over the last year, 
+~along with ranking and overall statistics (AVG, STDDEV) using window functions.
+~The threshold_calc CTE dynamically sets classification thresholds based on the average and standard deviation of daily sale rate and total quantity. 
+~Finally, the main query applies CASE statements to categorize products based on these calculated thresholds and ranks, providing detailed insights for inventory management.
+
+
+
+
