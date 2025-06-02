@@ -83,3 +83,61 @@ ORDER BY inventory_to_sales_ratio DESC
 LIMIT 5;
 
 
+Q3) Classify All Products as ‘Fast-Moving’ or ‘Slow-Moving’
+Write a solution to classify products into 'Fast-Moving' or 'Slow-Moving' based on a threshold 
+
+ 
+ 
+WITH product_stats AS (
+    SELECT 
+        Product_ID,
+        
+        SUM(Units_Sold) AS total_quantity,
+        COUNT(DISTINCT CASE WHEN Date >= DATE_SUB('2024-01-01', INTERVAL 30 DAY) THEN Date END) AS days_sold_last_30,
+        SUM(Units_Sold) / NULLIF(DATEDIFF(MAX(Date), MIN(Date)), 0) AS daily_sale_rate,
+        RANK() OVER (ORDER BY SUM(Units_Sold) DESC) AS quantity_rank,
+        COUNT(*) OVER () AS total_products,
+        AVG(SUM(Units_Sold)) OVER () AS avg_quantity,
+        STDDEV(SUM(Units_Sold)) OVER () AS stddev_quantity
+    FROM final_fact
+    WHERE Date >= DATE_SUB('2024-01-01', INTERVAL 1 YEAR)
+    GROUP BY Product_ID
+),
+
+threshold_calc AS (
+    SELECT 
+        AVG(daily_sale_rate) + STDDEV(daily_sale_rate) AS threshold_rate,
+        AVG(total_quantity) AS avg_quantity,
+        AVG(total_quantity) + STDDEV(total_quantity) AS high_quantity_threshold
+    FROM product_stats
+    WHERE daily_sale_rate > 0
+)
+
+SELECT 
+    p.Product_ID,
+    p.total_quantity,
+    p.daily_sale_rate,
+    t.threshold_rate,
+    t.avg_quantity,
+    t.high_quantity_threshold,
+    CASE 
+        WHEN p.daily_sale_rate >= t.threshold_rate 
+             AND p.total_quantity >= t.avg_quantity THEN 'Fast-Moving'
+        ELSE 'Slow-Moving'
+    END AS movement_category,
+    CASE 
+        WHEN p.quantity_rank <= p.total_products*0.2 THEN 'Top 20%'
+        WHEN p.quantity_rank <= p.total_products*0.5 THEN 'Middle 30%'
+        ELSE 'Bottom 50%'
+    END AS performance_segment,
+    CASE
+        WHEN p.total_quantity >= t.high_quantity_threshold THEN 'High Volume'
+        WHEN p.total_quantity >= t.avg_quantity THEN 'Medium Volume'
+        ELSE 'Low Volume'
+    END AS volume_category,
+    ROUND((p.quantity_rank/p.total_products)*100, 2) AS percentile_rank
+FROM product_stats p
+CROSS JOIN threshold_calc t
+ORDER BY 
+    p.total_quantity DESC,
+    p.daily_sale_rate DESC;
