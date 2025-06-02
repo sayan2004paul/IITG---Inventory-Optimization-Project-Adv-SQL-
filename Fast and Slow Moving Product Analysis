@@ -30,3 +30,56 @@ SELECT
 FROM product_sales_summary
 ORDER BY sales_velocity DESC
 LIMIT 5;
+
+
+
+
+
+
+
+Q2) Detect the Bottom 5 Slow-Moving Products with High Inventory Levels
+Write a solution to identify the 5 slowest-moving products that have high inventory levels. 
+For each product, calculate the inventory-to-sales ratio as (Inventory Level / Units Sold) and return the ones with the highest ratio, excluding products with zero sales.
+
+
+ 
+ 
+WITH latest_inventory AS (
+    SELECT 
+        Product_ID,
+        Inventory_Level,
+        ROW_NUMBER() OVER (PARTITION BY Product_ID ORDER BY Date DESC) AS rn
+    FROM final_fact
+),
+clean_inventory AS (
+    SELECT Product_ID, Inventory_Level
+    FROM latest_inventory
+    WHERE rn = 1
+),
+sales_summary AS (
+    SELECT 
+        Product_ID,
+        SUM(Units_Sold) AS total_units_sold
+    FROM final_fact
+    GROUP BY Product_ID
+),
+combined AS (
+    SELECT 
+        s.Product_ID,
+        c.Inventory_Level,
+        s.total_units_sold,
+        c.Inventory_Level / NULLIF(s.total_units_sold, 0) AS inventory_to_sales_ratio
+    FROM sales_summary s
+    JOIN clean_inventory c ON s.Product_ID = c.Product_ID
+    WHERE s.total_units_sold > 0
+)
+SELECT 
+    Product_ID,
+    Inventory_Level,
+    total_units_sold,
+    ROUND(inventory_to_sales_ratio, 4) AS inventory_to_sales_ratio
+FROM combined
+ORDER BY inventory_to_sales_ratio DESC
+LIMIT 5;
+
+
